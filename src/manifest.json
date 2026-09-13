@@ -1,0 +1,27 @@
+{
+  "name": "N1 遥控器",
+  "appid": "__UNI__N1REMOTE",
+  "description": "N1 电视盒子遥控器",
+  "versionName": "0.1.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "vueVersion": "3",
+  "uniStatistics": {
+    "enable": false
+  },
+  "mp-weixin": {
+    "appid": "",
+    "setting": {
+      "urlCheck": false,
+      "es6": true,
+      "minified": true
+    },
+    "usingComponents": true
+  },
+  "h5": {
+    "title": "N1 遥控器",
+    "router": {
+      "mode": "hash"
+    }
+  }
+}
