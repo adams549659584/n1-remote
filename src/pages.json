@@ -10,6 +10,7 @@
     }
   ],
   "globalStyle": {
+    "navigationBarTitleText": "N1 遥控器",
     "navigationBarTextStyle": "white",
     "navigationBarBackgroundColor": "#0A0E17",
     "backgroundColor": "#0A0E17",
