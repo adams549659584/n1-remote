@@ -1,17 +1,20 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import RemoteKey from '@/components/RemoteKey.vue'
+import TouchPad from '@/components/TouchPad.vue'
 import IpDialog from '@/components/IpDialog.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import { DPAD, GRID, KEYCODES } from '@/config/keys'
+import { DPAD, GRID, ACTIONS, SLIDE, KEYCODES } from '@/config/keys'
+import type { SlideDir } from '@/config/keys'
 import { getIp } from '@/utils/storage'
-import { sendKey, openSetting, ping } from '@/api/n1'
+import { sendKey, sendAction, openSetting, ping } from '@/api/n1'
 
 const ip = ref(getIp())
 const status = ref<'unknown' | 'online' | 'offline'>('unknown')
 const showIp = ref(false)
 const showPower = ref(false)
 const statusBarHeight = ref(0)
+const mode = ref<'key' | 'touch'>('key')
 
 let lastToast = 0
 function toastOnce(msg: string) {
@@ -44,6 +47,18 @@ const onKey = (code: number) => {
 const onSetting = () => {
   buzz()
   fire(() => openSetting(ip.value))
+}
+const onAction = (action: string) => {
+  buzz()
+  fire(() => sendAction(ip.value, action))
+}
+const onSlide = (dir: SlideDir) => {
+  buzz()
+  fire(() => sendKey(ip.value, SLIDE[dir]))
+}
+const onPadTap = () => {
+  buzz()
+  fire(() => sendKey(ip.value, KEYCODES.OK))
 }
 
 function onPowerConfirm() {
@@ -81,8 +96,28 @@ onMounted(() => {
       </view>
     </view>
 
+    <!-- 按键 / 触摸 切换 -->
+    <view class="seg">
+      <view
+        class="seg__item"
+        :class="{ 'seg__item--on': mode === 'key' }"
+        hover-class="seg__item--active"
+        @tap="mode = 'key'"
+      >
+        <text class="seg__text">按键</text>
+      </view>
+      <view
+        class="seg__item"
+        :class="{ 'seg__item--on': mode === 'touch' }"
+        hover-class="seg__item--active"
+        @tap="mode = 'touch'"
+      >
+        <text class="seg__text">触摸</text>
+      </view>
+    </view>
+
     <!-- D-pad -->
-    <view class="dpad">
+    <view v-if="mode === 'key'" class="dpad">
       <RemoteKey
         v-for="k in DPAD"
         :key="k.dir"
@@ -97,6 +132,8 @@ onMounted(() => {
       </view>
     </view>
 
+    <TouchPad v-else @slide="onSlide" @confirm="onPadTap" />
+
     <!-- 功能键网格 -->
     <view class="grid">
       <RemoteKey
@@ -108,6 +145,16 @@ onMounted(() => {
         :icon="item.icon"
         class="grid__item"
         @tap="'action' in item ? onSetting() : onKey(item.code)"
+      />
+      <RemoteKey
+        v-for="item in ACTIONS"
+        :key="item.label"
+        shape="pill"
+        :size="120"
+        :label="item.label"
+        :icon="item.icon"
+        class="grid__item"
+        @tap="onAction(item.action)"
       />
     </view>
 
@@ -213,6 +260,44 @@ onMounted(() => {
   height: 22rpx;
   background: var(--danger);
   top: 22rpx;
+}
+
+/* 按键 / 触摸 分段控件 */
+.seg {
+  display: flex;
+  gap: 8rpx;
+  padding: 6rpx;
+  border-radius: 28rpx;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--border);
+  box-shadow: inset 0 2rpx 6rpx rgba(0, 0, 0, 0.3);
+}
+.seg__item {
+  width: 160rpx;
+  height: 60rpx;
+  border-radius: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.16s ease, box-shadow 0.16s ease;
+}
+.seg__item--on {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.08) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 4rpx 12rpx rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.seg__item--active {
+  background: rgba(255, 255, 255, 0.1);
+}
+.seg__text {
+  font-size: 26rpx;
+  color: var(--text-dim);
+  letter-spacing: 1rpx;
+}
+.seg__item--on .seg__text {
+  color: var(--text);
 }
 
 /* D-pad */
